@@ -1,9 +1,9 @@
 <?php
 
-namespace Port\Tests\Writer;
+namespace Port\Doctrine\Tests;
 
-use Port\Writer\DoctrineWriter;
-use Port\Tests\Fixtures\Entity\TestEntity;
+use Port\Doctrine\DoctrineWriter;
+use Port\Doctrine\Tests\Fixtures\Entity\TestEntity;
 
 class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 {

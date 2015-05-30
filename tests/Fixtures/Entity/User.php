@@ -1,6 +1,6 @@
 <?php
 
-namespace Port\Tests\Fixtures\Entity;
+namespace Port\Doctrine\Tests\Fixtures\Entity;
 
 /**
  * @Entity()

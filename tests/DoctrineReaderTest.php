@@ -1,11 +1,11 @@
 <?php
 
-namespace Port\Tests\Reader;
+namespace Port\Doctrine\Tests;
 
-use Port\Reader\DoctrineReader;
+use Port\Doctrine\DoctrineReader;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
-use Port\Tests\Fixtures\Entity\User;
+use Port\Doctrine\Tests\Fixtures\Entity\User;
 
 class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
 {

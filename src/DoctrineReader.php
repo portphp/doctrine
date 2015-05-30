@@ -1,10 +1,11 @@
 <?php
 
-namespace Port\Reader;
+namespace Port\Doctrine;
 
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Doctrine\ORM\Query;
+use Port\Reader\CountableReader;
 
 /**
  * Reads entities through the Doctrine ORM

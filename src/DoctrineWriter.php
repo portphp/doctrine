@@ -1,6 +1,6 @@
 <?php
 
-namespace Port\Writer;
+namespace Port\Doctrine;
 
 use Port\Writer;
 use Doctrine\DBAL\Logging\SQLLogger;
@@ -16,7 +16,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
  *
  * @author David de Boer <david@ddeboer.nl>
  */
-class DoctrineWriter implements Writer, FlushableWriter
+class DoctrineWriter implements Writer, Writer\FlushableWriter
 {
     /**
      * @var EntityManagerInterface
