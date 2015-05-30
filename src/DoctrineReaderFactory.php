@@ -1,8 +1,7 @@
 <?php
 
-namespace Port\Doctrine\Factory;
+namespace Port\Doctrine;
 
-use Port\Doctrine\DoctrineReader;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
