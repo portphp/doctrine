@@ -1,5 +1,0 @@
-suites:
-  library_suite:
-    namespace: Port\Doctrine
-    psr4_prefix: Port\Doctrine
-formatter.name: pretty
