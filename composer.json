@@ -1,5 +1,5 @@
 {
-    "name": "portphp/doctrine",
+    "name": "portphp/doctrine-adapter",
     "description": "Doctrine ORM/ODM reader and writer for Port",
     "license": "MIT",
     "homepage": "https://github.com/portphp",
@@ -14,12 +14,12 @@
         },
         {
             "name": "Community contributors",
-            "homepage": "https://github.com/portphp/doctrine/graphs/contributors"
+            "homepage": "https://github.com/portphp/doctrine-adapter/graphs/contributors"
         }
     ],
     "support": {
         "issues": "https://github.com/portphp/portphp/issues",
-        "source": "https://github.com/portphp/doctrine",
+        "source": "https://github.com/portphp/doctrine-adapter",
         "docs": "https://portphp.readthedocs.org"
     },
     "require": {
