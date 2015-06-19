@@ -22,10 +22,14 @@
         "source": "https://github.com/portphp/doctrine",
         "docs": "https://portphp.readthedocs.org"
     },
+    "minimum-stability": "dev",    
+    "prefer-stable": true,
     "require": {
         "php": ">=5.4.0",
         "portphp/portphp": "1.0.x-dev",
-        "doctrine/orm": "~2.4"
+        "doctrine/orm": "~2.4",
+        "doctrine/mongodb": "dev-master",
+        "doctrine/mongodb-odm": "dev-master"
     },
     "autoload": {
         "psr-4": {
