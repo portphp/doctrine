@@ -3,6 +3,7 @@
 namespace Port\Doctrine;
 
 use Port\Writer;
+use Doctrine\Common\Util\Inflector;
 use Doctrine\DBAL\Logging\SQLLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
@@ -191,10 +192,11 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         $fieldNames = array_merge($this->entityMetadata->getFieldNames(), $this->entityMetadata->getAssociationNames());
         foreach ($fieldNames as $fieldName) {
             $value = null;
+            $classifiedFieldName = Inflector::classify($fieldName);
             if (isset($item[$fieldName])) {
                 $value = $item[$fieldName];
-            } elseif (method_exists($item, 'get' . ucfirst($fieldName))) {
-                $value = $item->{'get' . ucfirst($fieldName)};
+            } elseif (method_exists($item, 'get' . $classifiedFieldName)) {
+                $value = $item->{'get' . $classifiedFieldName};
             }
 
             if (null === $value) {
@@ -204,7 +206,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             if (!($value instanceof \DateTime)
                 || $value != $this->entityMetadata->getFieldValue($entity, $fieldName)
             ) {
-                $setter = 'set' . ucfirst($fieldName);
+                $setter = 'set' . $classifiedFieldName;
                 $this->setValue($entity, $value, $setter);
             }
         }
