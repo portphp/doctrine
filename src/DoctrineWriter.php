@@ -2,7 +2,7 @@
 
 namespace Port\Doctrine;
 
-use Port\Doctrine\Exception\UnsupportedDatabaseTypeException;
+use Port\Exception\UnsupportedDatabaseTypeException;
 use Port\Writer;
 use Doctrine\Common\Util\Inflector;
 use Doctrine\DBAL\Logging\SQLLogger;
@@ -95,11 +95,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         if (!($objectManager instanceof \Doctrine\ORM\EntityManager
             || $objectManager instanceof \Doctrine\ODM\MongoDB\DocumentManager)
         ) {
-            $message = sprintf(
-                'Unknown Object Manager type. Expected \Doctrine\ORM\EntityManager or \Doctrine\ODM\MongoDB\DocumentManager, %s given',
-                get_class($objectManager)
-            );
-            throw new UnsupportedDatabaseTypeException($message);
+            throw new UnsupportedDatabaseTypeException($objectManager);
         }
     }
 
@@ -263,7 +259,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     protected function truncateTable()
     {
-        if ($this->objectManager instanceof \Doctrine\ORM\objectManager) {
+        if ($this->objectManager instanceof \Doctrine\ORM\EntityManager) {
             $tableName = $this->objectMetadata->table['name'];
             $connection = $this->objectManager->getConnection();
             $query = $connection->getDatabasePlatform()->getTruncateTableSQL($tableName, true);
@@ -278,7 +274,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     protected function disableLogging()
     {
-        if (!($this->objectManager instanceof \Doctrine\ORM\objectManager)) return;
+        //TODO: do we need to add support for MongoDB logging?
+        if (!($this->objectManager instanceof \Doctrine\ORM\EntityManager)) return;
 
         $config = $this->objectManager->getConnection()->getConfiguration();
         $this->originalLogger = $config->getSQLLogger();
@@ -290,8 +287,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     protected function reEnableLogging()
     {
-        //TODO: add support for MongoDB logging
-        if (!($this->objectManager instanceof \Doctrine\ORM\objectManager)) return;
+        //TODO: do we need to add support for MongoDB logging?
+        if (!($this->objectManager instanceof \Doctrine\ORM\EntityManager)) return;
 
         $config = $this->objectManager->getConnection()->getConfiguration();
         $config->setSQLLogger($this->originalLogger);

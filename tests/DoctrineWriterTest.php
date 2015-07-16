@@ -14,7 +14,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->once())
                 ->method('persist');
 
-        $writer = new DoctrineWriter($em, 'DdeboerDataImport:TestEntity');
+        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
 
         $association = new TestEntity();
         $item = array(
@@ -32,7 +32,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->once())
                 ->method('persist');
 
-        $writer = new DoctrineWriter($em, 'DdeboerDataImport:TestEntity');
+        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
 
         $association = new TestEntity();
         $item = array(
@@ -46,9 +46,9 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
     
     public function testUnsupportedDatabaseTypeException()
     {
-        $this->setExpectedException('Port\Doctrine\Exception\UnsupportedDatabaseTypeException');
+        $this->setExpectedException('Port\Exception\UnsupportedDatabaseTypeException');
         $em = $this->getMock('Doctrine\Common\Persistence\ObjectManager');
-        $writer = new DoctrineWriter($em, 'DdeboerDataImport:TestEntity');
+        new DoctrineWriter($em, 'DdeboerPort:TestEntity');
     }
 
     protected function getEntityManager()
@@ -237,7 +237,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->once())
             ->method('getReference');
 
-        $writer = new DoctrineWriter($em, 'DdeboerDataImport:TestEntity');
+        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
 
         $item   = array(
             'firstProperty'    => 'some value',
@@ -258,7 +258,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->never())
             ->method('getReference');
 
-        $writer = new DoctrineWriter($em, 'DdeboerDataImport:TestEntity');
+        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
 
         $association = new TestEntity();
         $item        = array(
@@ -281,7 +281,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
             ->method('clear')
             ->with($this->equalTo('Port\Tests\Fixtures\Entity\TestEntity'));
 
-        $writer = new DoctrineWriter($em, 'DdeboerDataImport:TestEntity');
+        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
         $writer->finish();
     }
 }
