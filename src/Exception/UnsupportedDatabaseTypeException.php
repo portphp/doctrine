@@ -1,6 +1,6 @@
 <?php
 
-namespace Port\Exception;
+namespace Port\Doctrine\Exception;
 
 use Port\Exception;
 
