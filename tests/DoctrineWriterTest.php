@@ -46,7 +46,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
     
     public function testUnsupportedDatabaseTypeException()
     {
-        $this->setExpectedException('Port\Exception\UnsupportedDatabaseTypeException');
+        $this->setExpectedException('Port\Doctrine\Exception\UnsupportedDatabaseTypeException');
         $em = $this->getMock('Doctrine\Common\Persistence\ObjectManager');
         new DoctrineWriter($em, 'DdeboerPort:TestEntity');
     }
