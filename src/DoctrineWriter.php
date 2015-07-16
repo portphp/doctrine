@@ -4,6 +4,7 @@ namespace Port\Doctrine;
 
 use Port\Doctrine\Exception\UnsupportedDatabaseTypeException;
 use Port\Writer;
+use Doctrine\Common\Util\Inflector;
 use Doctrine\DBAL\Logging\SQLLogger;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
@@ -213,10 +214,11 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         $fieldNames = array_merge($this->objectMetadata->getFieldNames(), $this->objectMetadata->getAssociationNames());
         foreach ($fieldNames as $fieldName) {
             $value = null;
+            $classifiedFieldName = Inflector::classify($fieldName);
             if (isset($item[$fieldName])) {
                 $value = $item[$fieldName];
-            } elseif (method_exists($item, 'get' . ucfirst($fieldName))) {
-                $value = $item->{'get' . ucfirst($fieldName)};
+            } elseif (method_exists($item, 'get' . $classifiedFieldName)) {
+                $value = $item->{'get' . $classifiedFieldName};
             }
 
             if (null === $value) {
@@ -226,7 +228,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             if (!($value instanceof \DateTime)
                 || $value != $this->objectMetadata->getFieldValue($object, $fieldName)
             ) {
-                $setter = 'set' . ucfirst($fieldName);
+                $setter = 'set' . $classifiedFieldName;
                 $this->setValue($object, $value, $setter);
             }
         }
