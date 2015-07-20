@@ -2,7 +2,7 @@
 
 namespace Port\Doctrine;
 
-use Exception\UnsupportedDatabaseTypeException;
+use Port\Doctrine\Exception\UnsupportedDatabaseTypeException;
 use Port\Writer;
 use Doctrine\Common\Util\Inflector;
 use Doctrine\DBAL\Logging\SQLLogger;
