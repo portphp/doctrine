@@ -5,6 +5,8 @@ namespace Port\Doctrine;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Port\Reader\CountableReader;
 
 /**
@@ -30,13 +32,31 @@ class DoctrineReader implements CountableReader
     protected $iterableResult;
 
     /**
+     * @var QueryBuilder
+     */
+    protected $queryBuilder;
+
+    /**
      * @param ObjectManager $objectManager
      * @param string        $objectName    e.g. YourBundle:YourEntity
+     * @param QueryBuilder  $queryBuilder
      */
-    public function __construct(ObjectManager $objectManager, $objectName)
+    public function __construct(ObjectManager $objectManager, $objectName, QueryBuilder $queryBuilder = null)
     {
         $this->objectManager = $objectManager;
         $this->objectName = $objectName;
+        if (is_null($queryBuilder)) {
+            $queryBuilder = $objectManager->getRepository($objectName)->createQueryBuilder(substr($objectName, 0, 1));
+        }
+        $this->queryBuilder = $queryBuilder;
+    }
+
+    /**
+     * @param QueryBuilder $queryBuilder
+     */
+    public function setQueryBuilder(QueryBuilder $queryBuilder)
+    {
+        $this->queryBuilder = $queryBuilder;
     }
 
     /**
@@ -86,9 +106,7 @@ class DoctrineReader implements CountableReader
     public function rewind()
     {
         if (!$this->iterableResult) {
-            $query = $this->objectManager->createQuery(
-                sprintf('SELECT o FROM %s o', $this->objectName)
-            );
+            $query = $this->queryBuilder->getQuery();
             $this->iterableResult = $query->iterate([], Query::HYDRATE_ARRAY);
         }
 
@@ -100,10 +118,8 @@ class DoctrineReader implements CountableReader
      */
     public function count()
     {
-        $query = $this->objectManager->createQuery(
-            sprintf('SELECT COUNT(o) FROM %s o', $this->objectName)
-        );
+        $paginator = new Paginator($this->queryBuilder->getQuery());
 
-        return $query->getSingleScalarResult();
+        return count($paginator);
     }
 }
