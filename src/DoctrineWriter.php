@@ -2,12 +2,12 @@
 
 namespace Port\Doctrine;
 
+use Port\Doctrine\Exception\UnsupportedDatabaseTypeException;
 use Port\Writer;
 use Doctrine\Common\Util\Inflector;
 use Doctrine\DBAL\Logging\SQLLogger;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 
 /**
  * A bulk Doctrine writer
@@ -20,24 +20,30 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 class DoctrineWriter implements Writer, Writer\FlushableWriter
 {
     /**
-     * @var EntityManagerInterface
+     * Doctrine object manager
+     *
+     * @var ObjectManager
      */
-    protected $entityManager;
+    protected $objectManager;
 
     /**
+     * Fully qualified model name
+     *
      * @var string
      */
-    protected $entityName;
+    protected $objectName;
 
     /**
-     * @var EntityRepository
+     * Doctrine object repository
+     *
+     * @var ObjectRepository
      */
-    protected $entityRepository;
+    protected $objectRepository;
 
     /**
      * @var ClassMetadata
      */
-    protected $entityMetadata;
+    protected $objectMetadata;
 
     /**
      * Original Doctrine logger
@@ -54,30 +60,42 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     protected $truncate = true;
 
     /**
-     * List of fields used to lookup an entity
+     * List of fields used to lookup an object
      *
      * @var array
      */
     protected $lookupFields = array();
 
     /**
-     * @param EntityManagerInterface $entityManager
-     * @param string                 $entityName
-     * @param string|array           $index Field or fields to find current entities by
+     * Constructor
+     *
+     * @param ObjectManager $objectManager
+     * @param string        $objectName
+     * @param string|array        $index         Field or fields to find current entities by
      */
-    public function __construct(EntityManagerInterface $entityManager, $entityName, $index = null)
+    public function __construct(ObjectManager $objectManager, $objectName, $index = null)
     {
-        $this->entityManager = $entityManager;
-        $this->entityRepository = $entityManager->getRepository($entityName);
-        $this->entityMetadata = $entityManager->getClassMetadata($entityName);
-        //translate entityName in case a namespace alias is used
-        $this->entityName = $this->entityMetadata->getName();
-        if ($index) {
-            if (is_array($index)) {
+        $this->ensureSupportedObjectManager($objectManager);
+        $this->objectManager = $objectManager;
+        $this->objectRepository = $objectManager->getRepository($objectName);
+        $this->objectMetadata = $objectManager->getClassMetadata($objectName);
+        //translate objectName in case a namespace alias is used
+        $this->objectName = $this->objectMetadata->getName();
+        if($index) {
+            if(is_array($index)) {
                 $this->lookupFields = $index;
             } else {
                 $this->lookupFields = [$index];
             }
+        }
+    }
+
+    protected function ensureSupportedObjectManager(ObjectManager $objectManager)
+    {
+        if (!($objectManager instanceof \Doctrine\ORM\EntityManager
+            || $objectManager instanceof \Doctrine\ODM\MongoDB\DocumentManager)
+        ) {
+            throw new UnsupportedDatabaseTypeException($objectManager);
         }
     }
 
@@ -130,32 +148,32 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     }
 
     /**
-     * Return a new instance of the entity
+     * Return a new instance of the object
      *
      * @return object
      */
     protected function getNewInstance()
     {
-        $className = $this->entityMetadata->getName();
+        $className = $this->objectMetadata->getName();
 
         if (class_exists($className) === false) {
-            throw new \Exception('Unable to create new instance of ' . $className);
+            throw new \RuntimeException('Unable to create new instance of ' . $className);
         }
 
         return new $className;
     }
 
     /**
-     * Call a setter of the entity
+     * Call a setter of the object
      *
-     * @param object $entity
+     * @param object $object
      * @param mixed  $value
      * @param string $setter
      */
-    protected function setValue($entity, $value, $setter)
+    protected function setValue($object, $value, $setter)
     {
-        if (method_exists($entity, $setter)) {
-            $entity->$setter($value);
+        if (method_exists($object, $setter)) {
+            $object->$setter($value);
         }
     }
 
@@ -175,21 +193,21 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     public function writeItem(array $item)
     {
-        $entity = $this->findOrCreateItem($item);
+        $object = $this->findOrCreateItem($item);
 
-        $this->loadAssociationObjectsToEntity($item, $entity);
-        $this->updateEntity($item, $entity);
+        $this->loadAssociationObjectsToObject($item, $object);
+        $this->updateObject($item, $object);
 
-        $this->entityManager->persist($entity);
+        $this->objectManager->persist($object);
     }
 
     /**
      * @param array  $item
-     * @param object $entity
+     * @param object $object
      */
-    protected function updateEntity(array $item, $entity)
+    protected function updateObject(array $item, $object)
     {
-        $fieldNames = array_merge($this->entityMetadata->getFieldNames(), $this->entityMetadata->getAssociationNames());
+        $fieldNames = array_merge($this->objectMetadata->getFieldNames(), $this->objectMetadata->getAssociationNames());
         foreach ($fieldNames as $fieldName) {
             $value = null;
             $classifiedFieldName = Inflector::classify($fieldName);
@@ -204,10 +222,10 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             }
 
             if (!($value instanceof \DateTime)
-                || $value != $this->entityMetadata->getFieldValue($entity, $fieldName)
+                || $value != $this->objectMetadata->getFieldValue($object, $fieldName)
             ) {
                 $setter = 'set' . $classifiedFieldName;
-                $this->setValue($entity, $value, $setter);
+                $this->setValue($object, $value, $setter);
             }
         }
     }
@@ -216,15 +234,15 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      * Add the associated objects in case the item have for persist its relation
      *
      * @param array  $item
-     * @param object $entity
+     * @param object $object
      */
-    protected function loadAssociationObjectsToEntity(array $item, $entity)
+    protected function loadAssociationObjectsToObject(array $item, $object)
     {
-        foreach ($this->entityMetadata->getAssociationMappings() as $associationMapping) {
+        foreach ($this->objectMetadata->getAssociationMappings() as $associationMapping) {
 
             $value = null;
             if (isset($item[$associationMapping['fieldName']]) && !is_object($item[$associationMapping['fieldName']])) {
-                $value = $this->entityManager->getReference($associationMapping['targetEntity'], $item[$associationMapping['fieldName']]);
+                $value = $this->objectManager->getReference($associationMapping['targetEntity'], $item[$associationMapping['fieldName']]);
             }
 
             if (null === $value) {
@@ -232,7 +250,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             }
 
             $setter = 'set' . ucfirst($associationMapping['fieldName']);
-            $this->setValue($entity, $value, $setter);
+            $this->setValue($object, $value, $setter);
         }
     }
 
@@ -241,10 +259,14 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     protected function truncateTable()
     {
-        $tableName = $this->entityMetadata->table['name'];
-        $connection = $this->entityManager->getConnection();
-        $query = $connection->getDatabasePlatform()->getTruncateTableSQL($tableName, true);
-        $connection->executeQuery($query);
+        if ($this->objectManager instanceof \Doctrine\ORM\EntityManager) {
+            $tableName = $this->objectMetadata->table['name'];
+            $connection = $this->objectManager->getConnection();
+            $query = $connection->getDatabasePlatform()->getTruncateTableSQL($tableName, true);
+            $connection->executeQuery($query);
+        } elseif ($this->objectManager instanceof \Doctrine\ODM\MongoDB\DocumentManager) {
+            $this->objectManager->getDocumentCollection($this->objectName)->remove(array());
+        }
     }
 
     /**
@@ -252,7 +274,10 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     protected function disableLogging()
     {
-        $config = $this->entityManager->getConnection()->getConfiguration();
+        //TODO: do we need to add support for MongoDB logging?
+        if (!($this->objectManager instanceof \Doctrine\ORM\EntityManager)) return;
+
+        $config = $this->objectManager->getConnection()->getConfiguration();
         $this->originalLogger = $config->getSQLLogger();
         $config->setSQLLogger(null);
     }
@@ -262,47 +287,50 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     protected function reEnableLogging()
     {
-        $config = $this->entityManager->getConnection()->getConfiguration();
+        //TODO: do we need to add support for MongoDB logging?
+        if (!($this->objectManager instanceof \Doctrine\ORM\EntityManager)) return;
+
+        $config = $this->objectManager->getConnection()->getConfiguration();
         $config->setSQLLogger($this->originalLogger);
     }
 
     /**
-     * Finds existing entity or create a new instance
+     * Finds existing object or create a new instance
      *
      * @param array $item
      */
     protected function findOrCreateItem(array $item)
     {
-        $entity = null;
-        // If the table was not truncated to begin with, find current entity
+        $object = null;
+        // If the table was not truncated to begin with, find current object
         // first
         if (false === $this->truncate) {
             if (!empty($this->lookupFields)) {
                 $lookupConditions = array();
                 foreach ($this->lookupFields as $fieldName) {
                     $lookupConditions[$fieldName] = $item[$fieldName];
-                }
-                $entity = $this->entityRepository->findOneBy(
+}
+                $object = $this->objectRepository->findOneBy(
                     $lookupConditions
                 );
             } else {
-                $entity = $this->entityRepository->find(current($item));
+                $object = $this->objectRepository->find(current($item));
             }
         }
 
-        if (!$entity) {
+        if (!$object) {
             return $this->getNewInstance();
         }
 
-        return $entity;
+        return $object;
     }
 
     /**
-     * Flush and clear the entity manager
+     * Flush and clear the object manager
      */
     public function flush()
     {
-        $this->entityManager->flush();
-        $this->entityManager->clear($this->entityName);
+        $this->objectManager->flush();
+        $this->objectManager->clear($this->objectName);
     }
 }
