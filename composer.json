@@ -1,5 +1,5 @@
 {
-    "name": "portphp/doctrine-adapter",
+    "name": "portphp/doctrine",
     "description": "Doctrine ORM/ODM reader and writer for Port",
     "license": "MIT",
     "homepage": "https://github.com/portphp",
