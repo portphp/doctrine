@@ -89,7 +89,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             }
         }
     }
-    
+
     protected function ensureSupportedObjectManager(ObjectManager $objectManager)
     {
         if (!($objectManager instanceof \Doctrine\ORM\EntityManager
@@ -179,8 +179,6 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
 
     /**
      * Re-enable Doctrine logging
-     *
-     * @return $this
      */
     public function finish()
     {
