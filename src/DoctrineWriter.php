@@ -71,7 +71,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      *
      * @param ObjectManager $objectManager
      * @param string        $objectName
-     * @param string|array        $index         Field or fields to find current entities by
+     * @param string|array  $index         Field or fields to find current entities by
      */
     public function __construct(ObjectManager $objectManager, $objectName, $index = null)
     {
@@ -148,6 +148,37 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     }
 
     /**
+     * Re-enable Doctrine logging
+     */
+    public function finish()
+    {
+        $this->flush();
+        $this->reEnableLogging();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function writeItem(array $item)
+    {
+        $object = $this->findOrCreateItem($item);
+
+        $this->loadAssociationObjectsToObject($item, $object);
+        $this->updateObject($item, $object);
+
+        $this->objectManager->persist($object);
+    }
+
+    /**
+     * Flush and clear the object manager
+     */
+    public function flush()
+    {
+        $this->objectManager->flush();
+        $this->objectManager->clear($this->objectName);
+    }
+
+    /**
      * Return a new instance of the object
      *
      * @return object
@@ -175,28 +206,6 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         if (method_exists($object, $setter)) {
             $object->$setter($value);
         }
-    }
-
-    /**
-     * Re-enable Doctrine logging
-     */
-    public function finish()
-    {
-        $this->flush();
-        $this->reEnableLogging();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function writeItem(array $item)
-    {
-        $object = $this->findOrCreateItem($item);
-
-        $this->loadAssociationObjectsToObject($item, $object);
-        $this->updateObject($item, $object);
-
-        $this->objectManager->persist($object);
     }
 
     /**
@@ -293,9 +302,9 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     }
 
     /**
-     * Finds existing object or create a new instance
-     *
      * @param array $item
+     *
+     * @return object
      */
     protected function findOrCreateItem(array $item)
     {
@@ -307,7 +316,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
                 $lookupConditions = array();
                 foreach ($this->lookupFields as $fieldName) {
                     $lookupConditions[$fieldName] = $item[$fieldName];
-}
+                }
                 $object = $this->objectRepository->findOneBy(
                     $lookupConditions
                 );
@@ -321,14 +330,5 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         }
 
         return $object;
-    }
-
-    /**
-     * Flush and clear the object manager
-     */
-    public function flush()
-    {
-        $this->objectManager->flush();
-        $this->objectManager->clear($this->objectName);
     }
 }
