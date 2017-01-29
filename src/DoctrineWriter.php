@@ -64,7 +64,14 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      *
      * @var array
      */
-    protected $lookupFields = array();
+    protected $lookupFields = [];
+
+    /**
+     * Method used for looking up the item
+     *
+     * @var array
+     */
+    protected $lookupMethod;
 
     /**
      * Constructor
@@ -72,31 +79,38 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      * @param ObjectManager $objectManager
      * @param string        $objectName
      * @param string|array  $index         Field or fields to find current entities by
+     * @param string        $lookupMethod  Method used for looking up the item
      */
-    public function __construct(ObjectManager $objectManager, $objectName, $index = null)
-    {
+    public function __construct(
+        ObjectManager $objectManager,
+        $objectName,
+        $index = null,
+        $lookupMethod = 'findOneBy'
+    ) {
         $this->ensureSupportedObjectManager($objectManager);
         $this->objectManager = $objectManager;
         $this->objectRepository = $objectManager->getRepository($objectName);
         $this->objectMetadata = $objectManager->getClassMetadata($objectName);
         //translate objectName in case a namespace alias is used
         $this->objectName = $this->objectMetadata->getName();
-        if($index) {
-            if(is_array($index)) {
+        if ($index) {
+            if (is_array($index)) {
                 $this->lookupFields = $index;
             } else {
                 $this->lookupFields = [$index];
             }
         }
-    }
 
-    protected function ensureSupportedObjectManager(ObjectManager $objectManager)
-    {
-        if (!($objectManager instanceof \Doctrine\ORM\EntityManager
-            || $objectManager instanceof \Doctrine\ODM\MongoDB\DocumentManager)
-        ) {
-            throw new UnsupportedDatabaseTypeException($objectManager);
+        if (!method_exists($this->objectRepository, $lookupMethod)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Repository %s has no method %s',
+                    get_class($this->objectRepository),
+                    $lookupMethod
+                )
+            );
         }
+        $this->lookupMethod = [$this->objectRepository, $lookupMethod];
     }
 
     /**
@@ -311,15 +325,14 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         $object = null;
         // If the table was not truncated to begin with, find current object
         // first
-        if (false === $this->truncate) {
+        if (!$this->truncate) {
             if (!empty($this->lookupFields)) {
                 $lookupConditions = array();
                 foreach ($this->lookupFields as $fieldName) {
                     $lookupConditions[$fieldName] = $item[$fieldName];
                 }
-                $object = $this->objectRepository->findOneBy(
-                    $lookupConditions
-                );
+
+                $object = call_user_func($this->lookupMethod, $lookupConditions);
             } else {
                 $object = $this->objectRepository->find(current($item));
             }
@@ -330,5 +343,14 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         }
 
         return $object;
+    }
+
+    protected function ensureSupportedObjectManager(ObjectManager $objectManager)
+    {
+        if (!($objectManager instanceof \Doctrine\ORM\EntityManager
+            || $objectManager instanceof \Doctrine\ODM\MongoDB\DocumentManager)
+        ) {
+            throw new UnsupportedDatabaseTypeException($objectManager);
+        }
     }
 }
