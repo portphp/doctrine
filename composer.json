@@ -24,7 +24,8 @@
     },
     "require": {
         "php": ">=5.4.0",
-        "portphp/portphp": "1.0.x-dev"
+        "portphp/portphp": "1.0.x-dev",
+        "doctrine/common": "^2.2"
     },
     "require-dev": {
         "phpunit/phpunit": "4.7.*",
