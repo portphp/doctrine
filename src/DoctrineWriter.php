@@ -173,7 +173,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     /**
      * {@inheritdoc}
      */
-    public function writeItem(array $item) : DoctrineWriter
+    public function writeItem(array $item)
     {
         $object = $this->findOrCreateItem($item);
 
