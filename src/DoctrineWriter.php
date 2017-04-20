@@ -181,6 +181,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         $this->updateObject($item, $object);
 
         $this->objectManager->persist($object);
+        
+        return $this;
     }
 
     /**
