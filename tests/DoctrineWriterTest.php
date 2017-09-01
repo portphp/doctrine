@@ -7,6 +7,8 @@ use Port\Doctrine\Tests\Fixtures\Entity\TestEntity;
 
 class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 {
+    const TEST_ENTITY = 'Port\Doctrine\Tests\Fixtures\Entity\TestEntity';
+
     public function testWriteItem()
     {
         $em = $this->getEntityManager();
@@ -14,7 +16,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->once())
                 ->method('persist');
 
-        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
+        $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
         $item = array(
@@ -24,7 +26,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         );
         $writer->writeItem($item);
     }
-    
+
     public function testWriteItemMongodb()
     {
         $em = $this->getMongoDocumentManager();
@@ -32,7 +34,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->once())
                 ->method('persist');
 
-        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
+        $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
         $item = array(
@@ -43,12 +45,13 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $writer->prepare();
         $writer->writeItem($item);
     }
-    
+
     public function testUnsupportedDatabaseTypeException()
     {
-        $this->setExpectedException('Port\Doctrine\Exception\UnsupportedDatabaseTypeException');
-        $em = $this->getMock('Doctrine\Common\Persistence\ObjectManager');
-        new DoctrineWriter($em, 'DdeboerPort:TestEntity');
+        $this->expectException('Port\Doctrine\Exception\UnsupportedDatabaseTypeException');
+        $em = $this->getMockBuilder('Doctrine\Common\Persistence\ObjectManager')
+            ->getMock();
+        new DoctrineWriter($em, 'Port:TestEntity');
     }
 
     protected function getEntityManager()
@@ -69,7 +72,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 
         $metadata->expects($this->any())
             ->method('getName')
-            ->will($this->returnValue('Port\Tests\Fixtures\Entity\TestEntity'));
+            ->will($this->returnValue(self::TEST_ENTITY));
 
         $metadata->expects($this->any())
             ->method('getFieldNames')
@@ -81,7 +84,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 
         $metadata->expects($this->any())
             ->method('getAssociationMappings')
-            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => 'Port\Tests\Fixtures\Entity\TestEntity'))));
+            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => self::TEST_ENTITY))));
 
         $configuration = $this->getMockBuilder('Doctrine\DBAL\Configuration')
             ->setMethods(array('getConnection'))
@@ -108,10 +111,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $connection->expects($this->any())
             ->method('executeQuery')
             ->with('TRUNCATE SQL');
-            
-        $em->expects($this->never())
-            ->method('getDocumentCollection');
-            
+
         $em->expects($this->once())
             ->method('getRepository')
             ->will($this->returnValue($repo));
@@ -134,7 +134,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 
         return $em;
     }
-    
+
 
     protected function getMongoDocumentManager()
     {
@@ -154,7 +154,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 
         $metadata->expects($this->any())
             ->method('getName')
-            ->will($this->returnValue('Port\Tests\Fixtures\Entity\TestEntity'));
+            ->will($this->returnValue(self::TEST_ENTITY));
 
         $metadata->expects($this->any())
             ->method('getFieldNames')
@@ -163,10 +163,10 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $metadata->expects($this->any())
             ->method('getAssociationNames')
             ->will($this->returnValue(array('firstAssociation')));
-            
+
         $metadata->expects($this->any())
             ->method('getAssociationMappings')
-            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => 'Port\Tests\Fixtures\Entity\TestEntity'))));
+            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => self::TEST_ENTITY))));
 
         $configuration = $this->getMockBuilder('Doctrine\DBAL\Configuration')
             ->setMethods(array('getConnection'))
@@ -237,7 +237,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->once())
             ->method('getReference');
 
-        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
+        $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $item   = array(
             'firstProperty'    => 'some value',
@@ -258,7 +258,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em->expects($this->never())
             ->method('getReference');
 
-        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
+        $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
         $item        = array(
@@ -279,9 +279,9 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 
         $em->expects($this->once())
             ->method('clear')
-            ->with($this->equalTo('Port\Tests\Fixtures\Entity\TestEntity'));
+            ->with($this->equalTo(self::TEST_ENTITY));
 
-        $writer = new DoctrineWriter($em, 'DdeboerPort:TestEntity');
+        $writer = new DoctrineWriter($em, 'Port:TestEntity');
         $writer->finish();
     }
 }
