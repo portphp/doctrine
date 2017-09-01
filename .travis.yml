@@ -6,6 +6,7 @@ php:
   - 5.6
   - 7.0
   - 7.1
+  - 7.2
   - hhvm
 
 matrix:
@@ -18,8 +19,12 @@ matrix:
         - COVERAGE=true
         - PHPUNIT_FLAGS="--coverage-clover=coverage.clover"
 
+before_install:
+  - if [[ ${TRAVIS_PHP_VERSION:0:2} == "5." ]]; then echo "extension = mongo.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
+  - if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
+  - if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then composer require alcaeus/mongo-php-adapter --ignore-platform-reqs; fi
+
 install:
-  - phpenv config-add travis-php.ini
   - travis_retry composer update ${COMPOSER_FLAGS} --prefer-source --no-interaction
 
 script:

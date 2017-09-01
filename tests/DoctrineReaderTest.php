@@ -43,7 +43,7 @@ class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
 
         $em->flush();
 
-        return new DoctrineReader($em, 'Port\Tests\Fixtures\Entity\User');
+        return new DoctrineReader($em, 'Port\Doctrine\Tests\Fixtures\Entity\User');
     }
 
     protected function getEntityManager()
@@ -62,7 +62,7 @@ class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($em);
         $schemaTool->createSchema(
             array(
-                $em->getMetadataFactory()->getMetadataFor('Port\Tests\Fixtures\Entity\User')
+                $em->getMetadataFactory()->getMetadataFor('Port\Doctrine\Tests\Fixtures\Entity\User')
             )
         );
 

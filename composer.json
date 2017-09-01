@@ -14,12 +14,12 @@
         },
         {
             "name": "Community contributors",
-            "homepage": "https://github.com/portphp/doctrine-adapter/graphs/contributors"
+            "homepage": "https://github.com/portphp/doctrine/graphs/contributors"
         }
     ],
     "support": {
         "issues": "https://github.com/portphp/portphp/issues",
-        "source": "https://github.com/portphp/doctrine-adapter",
+        "source": "https://github.com/portphp/doctrine",
         "docs": "https://portphp.readthedocs.org"
     },
     "require": {
@@ -28,10 +28,9 @@
         "doctrine/common": "^2.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "4.7.*",
+        "phpunit/phpunit": "^5.2",
         "ext-sqlite3": "*",
         "doctrine/orm": "~2.4",
-        "doctrine/mongodb": "^1.2",
         "doctrine/mongodb-odm": "^1.0"
     },
     "autoload": {
