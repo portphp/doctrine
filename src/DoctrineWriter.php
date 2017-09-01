@@ -234,8 +234,6 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             $classifiedFieldName = Inflector::classify($fieldName);
             if (isset($item[$fieldName])) {
                 $value = $item[$fieldName];
-            } elseif (method_exists($item, 'get' . $classifiedFieldName)) {
-                $value = $item->{'get' . $classifiedFieldName};
             }
 
             if (null === $value) {
