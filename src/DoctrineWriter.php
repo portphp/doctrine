@@ -99,6 +99,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             } else {
                 $this->lookupFields = [$index];
             }
+        } else {
+            $this->lookupFields = $this->objectMetadata->getIdentifierFieldNames();
         }
 
         if (!method_exists($this->objectRepository, $lookupMethod)) {
