@@ -51,11 +51,21 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     private $lookupStrategy;
 
+    /**
+     * Create a Doctrine writer with an object lookup strategy.
+     *
+     * @param string         $objectName
+     * @param ObjectManager  $objectManager
+     * @param LookupStrategy $lookupStrategy
+     *
+     * @return self
+     */
     public static function withLookupStrategy(
+        $objectName,
         ObjectManager $objectManager,
         LookupStrategy $lookupStrategy
     ) {
-        return new self($objectManager, null, null, $lookupStrategy);
+        return new self($objectManager, $objectName, null, $lookupStrategy);
     }
 
     /**
@@ -77,6 +87,14 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         $lookupMethod = 'findOneBy',
         LookupStrategy $lookupStrategy = null
     ) {
+        if ($index !== null || $lookupMethod !== 'findOneBy') {
+            @trigger_error(
+                'The $index and $lookupMethod arguments are deprecated. '
+                . 'Please use DoctrineWriter::withLookupStrategy() instead',
+                E_USER_DEPRECATED
+            );
+        }
+
         $this->ensureSupportedObjectManager($objectManager);
         $this->objectManager = $objectManager;
         $this->objectMetadata = $objectManager->getClassMetadata($objectName);
@@ -128,9 +146,9 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     }
 
     /**
-     * Disable Doctrine logging
+     * {@inheritdoc}
      *
-     * @return $this
+     * Disable Doctrine logging
      */
     public function prepare()
     {
@@ -142,6 +160,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     }
 
     /**
+     * {@inheritdoc}
+     *
      * Re-enable Doctrine logging
      */
     public function finish()

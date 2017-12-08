@@ -111,6 +111,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 
         $em->expects($this->once())
             ->method('getClassMetadata')
+            ->with('Port:TestEntity')
             ->will($this->returnValue($metadata));
 
         $em->expects($this->any())
@@ -275,7 +276,11 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em = $this->getEntityManager();
 
         $lookupStrategy = new FieldsLookupStrategy($em, 'Port:TestEntity');
-        $writer = DoctrineWriter::withLookupStrategy($this->getEntityManager(), $lookupStrategy);
+        $writer = DoctrineWriter::withLookupStrategy(
+            'Port:TestEntity',
+            $this->getEntityManager(),
+            $lookupStrategy
+        );
 
         $item = [
             'firstProperty' => 'some value',
