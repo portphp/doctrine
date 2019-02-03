@@ -5,6 +5,7 @@ namespace Port\Doctrine;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
 use Port\Reader\CountableReader;
 
 /**
@@ -29,14 +30,34 @@ class DoctrineReader implements CountableReader
      */
     protected $iterableResult;
 
+    /** @var QueryBuilder */
+    protected $queryBuilder;
+
     /**
      * @param ObjectManager $objectManager
-     * @param string        $objectName    e.g. YourBundle:YourEntity
+     * @param string $objectName e.g. YourBundle:YourEntity
      */
     public function __construct(ObjectManager $objectManager, $objectName)
     {
         $this->objectManager = $objectManager;
         $this->objectName = $objectName;
+    }
+
+    public function setQueryBuilder(QueryBuilder $queryBuilder)
+    {
+        $this->queryBuilder = $queryBuilder;
+
+        return $this;
+    }
+
+    public function getQueryBuilder()
+    {
+        if ($this->queryBuilder === null) {
+            $this->queryBuilder = $this->objectManager->createQueryBuilder()
+                ->from($this->objectName, 'o');
+        }
+
+        return clone $this->queryBuilder;
     }
 
     /**
@@ -45,7 +66,7 @@ class DoctrineReader implements CountableReader
     public function getFields()
     {
         return $this->objectManager->getClassMetadata($this->objectName)
-                 ->getFieldNames();
+            ->getFieldNames();
     }
 
     /**
@@ -86,11 +107,7 @@ class DoctrineReader implements CountableReader
     public function rewind()
     {
         if (!$this->iterableResult) {
-            
-            $query = $this->objectManager->createQueryBuilder()
-               ->select('o')
-               ->from($this->objectName, 'o')
-               ->getQuery();
+            $query = $this->getQueryBuilder()->select('o')->getQuery();
 
             $this->iterableResult = $query->iterate([], Query::HYDRATE_ARRAY);
         }
@@ -103,10 +120,7 @@ class DoctrineReader implements CountableReader
      */
     public function count()
     {
-        $query = $this->objectManager->createQueryBuilder()
-           ->select('count(o)')
-           ->from($this->objectName, 'o')
-           ->getQuery();
+        $query = $this->getQueryBuilder()->select('count(o)')->getQuery();
 
         return $query->getSingleScalarResult();
     }
