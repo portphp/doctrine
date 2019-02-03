@@ -50,7 +50,7 @@ class DoctrineReader implements CountableReader
         return $this;
     }
 
-    public function getQueryBuilder()
+    protected function getQueryBuilder()
     {
         if ($this->queryBuilder === null) {
             $this->queryBuilder = $this->objectManager->createQueryBuilder()
