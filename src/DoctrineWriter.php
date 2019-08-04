@@ -3,6 +3,7 @@
 namespace Port\Doctrine;
 
 use Port\Doctrine\Exception\UnsupportedDatabaseTypeException;
+use Port\Doctrine\LookupStrategy\FieldsLookupStrategy;
 use Port\Writer;
 use Doctrine\Common\Util\Inflector;
 use Doctrine\DBAL\Logging\SQLLogger;
@@ -27,20 +28,6 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     protected $objectManager;
 
     /**
-     * Fully qualified model name
-     *
-     * @var string
-     */
-    protected $objectName;
-
-    /**
-     * Doctrine object repository
-     *
-     * @var ObjectRepository
-     */
-    protected $objectRepository;
-
-    /**
      * @var ClassMetadata
      */
     protected $objectMetadata;
@@ -60,57 +47,68 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     protected $truncate = true;
 
     /**
-     * List of fields used to lookup an object
-     *
-     * @var array
+     * @var LookupStrategy
      */
-    protected $lookupFields = [];
+    private $lookupStrategy;
 
     /**
-     * Method used for looking up the item
+     * Create a Doctrine writer with an object lookup strategy.
      *
-     * @var array
+     * @param string         $objectName
+     * @param ObjectManager  $objectManager
+     * @param LookupStrategy $lookupStrategy
+     *
+     * @return self
      */
-    protected $lookupMethod;
+    public static function withLookupStrategy(
+        $objectName,
+        ObjectManager $objectManager,
+        LookupStrategy $lookupStrategy
+    ) {
+        return new self($objectManager, $objectName, null, $lookupStrategy);
+    }
 
     /**
      * Constructor
      *
-     * @param ObjectManager $objectManager
-     * @param string        $objectName
-     * @param string|array  $index         Field or fields to find current entities by
-     * @param string        $lookupMethod  Method used for looking up the item
+     * @param ObjectManager  $objectManager
+     * @param string         $objectName
+     * @param string|array   $index          Field or fields to find current
+     *                                       entities by
+     * @param string         $lookupMethod   Method used for looking up the item
+     * @param LookupStrategy $lookupStrategy
+     *
+     * @throws UnsupportedDatabaseTypeException
      */
     public function __construct(
         ObjectManager $objectManager,
         $objectName,
         $index = null,
-        $lookupMethod = 'findOneBy'
+        $lookupMethod = 'findOneBy',
+        LookupStrategy $lookupStrategy = null
     ) {
-        $this->ensureSupportedObjectManager($objectManager);
-        $this->objectManager = $objectManager;
-        $this->objectRepository = $objectManager->getRepository($objectName);
-        $this->objectMetadata = $objectManager->getClassMetadata($objectName);
-        //translate objectName in case a namespace alias is used
-        $this->objectName = $this->objectMetadata->getName();
-        if ($index) {
-            if (is_array($index)) {
-                $this->lookupFields = $index;
-            } else {
-                $this->lookupFields = [$index];
-            }
-        }
-
-        if (!method_exists($this->objectRepository, $lookupMethod)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Repository %s has no method %s',
-                    get_class($this->objectRepository),
-                    $lookupMethod
-                )
+        if ($index !== null || $lookupMethod !== 'findOneBy') {
+            @trigger_error(
+                'The $index and $lookupMethod arguments are deprecated. '
+                . 'Please use DoctrineWriter::withLookupStrategy() instead',
+                E_USER_DEPRECATED
             );
         }
-        $this->lookupMethod = [$this->objectRepository, $lookupMethod];
+
+        $this->ensureSupportedObjectManager($objectManager);
+        $this->objectManager = $objectManager;
+        $this->objectMetadata = $objectManager->getClassMetadata($objectName);
+
+        if ($objectManager !== null && $index !== null) {
+            $lookupStrategy = (new FieldsLookupStrategy($objectManager, $objectName))
+                ->withIndex($index);
+
+            if ($lookupMethod) {
+                $lookupStrategy = $lookupStrategy->withLookupMethod($lookupMethod);
+            }
+
+            $this->lookupStrategy = $lookupStrategy;
+        }
     }
 
     /**
@@ -148,9 +146,9 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     }
 
     /**
-     * Disable Doctrine logging
+     * {@inheritdoc}
      *
-     * @return $this
+     * Disable Doctrine logging
      */
     public function prepare()
     {
@@ -162,6 +160,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     }
 
     /**
+     * {@inheritdoc}
+     *
      * Re-enable Doctrine logging
      */
     public function finish()
@@ -189,7 +189,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     public function flush()
     {
         $this->objectManager->flush();
-        $this->objectManager->clear($this->objectName);
+        $this->objectManager->clear($this->objectMetadata->getName());
     }
 
     /**
@@ -284,7 +284,9 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             $query = $connection->getDatabasePlatform()->getTruncateTableSQL($tableName, true);
             $connection->executeQuery($query);
         } elseif ($this->objectManager instanceof \Doctrine\ODM\MongoDB\DocumentManager) {
-            $this->objectManager->getDocumentCollection($this->objectName)->remove(array());
+            $this->objectManager->getDocumentCollection(
+                $this->objectMetadata->getName()
+            )->remove([]);
         }
     }
 
@@ -320,27 +322,13 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
      */
     protected function findOrCreateItem(array $item)
     {
-        $object = null;
         // If the table was not truncated to begin with, find current object
         // first
         if (!$this->truncate) {
-            if (!empty($this->lookupFields)) {
-                $lookupConditions = array();
-                foreach ($this->lookupFields as $fieldName) {
-                    $lookupConditions[$fieldName] = $item[$fieldName];
-                }
-
-                $object = call_user_func($this->lookupMethod, $lookupConditions);
-            } else {
-                $object = $this->objectRepository->find(current($item));
-            }
+            return $this->lookupStrategy->lookup($item);
         }
 
-        if (!$object) {
-            return $this->getNewInstance();
-        }
-
-        return $object;
+        return $this->getNewInstance();
     }
 
     protected function ensureSupportedObjectManager(ObjectManager $objectManager)

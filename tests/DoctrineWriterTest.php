@@ -3,6 +3,7 @@
 namespace Port\Doctrine\Tests;
 
 use Port\Doctrine\DoctrineWriter;
+use Port\Doctrine\LookupStrategy\FieldsLookupStrategy;
 use Port\Doctrine\Tests\Fixtures\Entity\TestEntity;
 
 class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
@@ -57,11 +58,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
     protected function getEntityManager()
     {
         $em = $this->getMockBuilder('Doctrine\ORM\EntityManager')
-            ->setMethods(array('getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getReference'))
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $repo = $this->getMockBuilder('Doctrine\ORM\EntityRepository')
+            ->setMethods(['getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getReference'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -113,11 +110,8 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
             ->with('TRUNCATE SQL');
 
         $em->expects($this->once())
-            ->method('getRepository')
-            ->will($this->returnValue($repo));
-
-        $em->expects($this->once())
             ->method('getClassMetadata')
+            ->with('Port:TestEntity')
             ->will($this->returnValue($metadata));
 
         $em->expects($this->any())
@@ -139,11 +133,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
     protected function getMongoDocumentManager()
     {
         $dm = $this->getMockBuilder('Doctrine\ODM\MongoDB\DocumentManager')
-            ->setMethods(array('getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getDocumentCollection'))
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $repo = $this->getMockBuilder('Doctrine\ODM\MongoDB\DocumentRepository')
+            ->setMethods(['getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getDocumentCollection'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -191,10 +181,6 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
 
         $connection->expects($this->never())
             ->method('executeQuery');
-
-        $dm->expects($this->once())
-            ->method('getRepository')
-            ->will($this->returnValue($repo));
 
         $dm->expects($this->once())
             ->method('getClassMetadata')
@@ -282,6 +268,26 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
             ->with($this->equalTo(self::TEST_ENTITY));
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
+        $writer->finish();
+    }
+
+    public function testWithLookupStrategy()
+    {
+        $em = $this->getEntityManager();
+
+        $lookupStrategy = new FieldsLookupStrategy($em, 'Port:TestEntity');
+        $writer = DoctrineWriter::withLookupStrategy(
+            'Port:TestEntity',
+            $this->getEntityManager(),
+            $lookupStrategy
+        );
+
+        $item = [
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
+            'firstAssociation'=> new TestEntity(),
+        ];
+        $writer->writeItem($item);
         $writer->finish();
     }
 }
