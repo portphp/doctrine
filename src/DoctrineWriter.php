@@ -159,6 +159,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         if (true === $this->truncate) {
             $this->truncateTable();
         }
+
+        return $this;
     }
 
     /**
