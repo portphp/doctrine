@@ -278,8 +278,7 @@ class DoctrineWriterTest extends \PHPUnit_Framework_TestCase
         $em = $this->getEntityManager();
 
         $em->expects($this->once())
-            ->method('clear')
-            ->with($this->equalTo(self::TEST_ENTITY));
+            ->method('clear');
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
         $writer->finish();
