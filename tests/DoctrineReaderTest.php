@@ -2,17 +2,18 @@
 
 namespace Port\Doctrine\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Port\Doctrine\DoctrineReader;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Port\Doctrine\Tests\Fixtures\Entity\User;
 
-class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
+class DoctrineReaderTest extends TestCase
 {
     public function testGetFields()
     {
         $fields = $this->getReader()->getFields();
-        $this->assertInternalType('array', $fields);
+        $this->assertIsArray($fields);
         $this->assertEquals(array('id', 'username'), $fields);
     }
 
@@ -25,7 +26,7 @@ class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
     {
         $i = 1;
         foreach ($this->getReader() as $data) {
-            $this->assertInternalType('array', $data);
+            $this->assertIsArray($data);
             $this->assertEquals('user' . $i, $data['username']);
             $i++;
         }

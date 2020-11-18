@@ -2,12 +2,13 @@
 
 namespace Port\Doctrine;
 
+use Doctrine\Inflector\InflectorFactory;
+use Doctrine\Persistence\Mapping\ClassMetadata;
+use Doctrine\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectRepository;
 use Port\Doctrine\Exception\UnsupportedDatabaseTypeException;
 use Port\Writer;
-use Doctrine\Common\Util\Inflector;
 use Doctrine\DBAL\Logging\SQLLogger;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 
 /**
  * A bulk Doctrine writer
@@ -231,7 +232,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         $fieldNames = array_merge($this->objectMetadata->getFieldNames(), $this->objectMetadata->getAssociationNames());
         foreach ($fieldNames as $fieldName) {
             $value = null;
-            $classifiedFieldName = Inflector::classify($fieldName);
+            $inflector = InflectorFactory::create()->build();
+            $classifiedFieldName = $inflector->classify($fieldName);
             if (isset($item[$fieldName])) {
                 $value = $item[$fieldName];
             }
@@ -284,7 +286,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             $query = $connection->getDatabasePlatform()->getTruncateTableSQL($tableName, true);
             $connection->executeQuery($query);
         } elseif ($this->objectManager instanceof \Doctrine\ODM\MongoDB\DocumentManager) {
-            $this->objectManager->getDocumentCollection($this->objectName)->remove(array());
+            //$this->objectManager->getDocumentCollection($this->objectName)->remove(array());
+            $this->objectManager->getDocumentCollection($this->objectName);
         }
     }
 
