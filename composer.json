@@ -48,5 +48,11 @@
         "branch-alias": {
             "dev-master": "2.0.x-dev"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/klodoma/portphp-portphp"
+        }
+    ]
 }
