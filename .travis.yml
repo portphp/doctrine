@@ -3,11 +3,8 @@ dist: trusty
 language: php
 
 php:
-  - 5.6
-  - 7.0
-  - 7.1
-  - 7.2
   - 7.3
+  - 7.4
   - nightly
   - hhvm
 
@@ -16,14 +13,13 @@ matrix:
     - php: hhvm
     - php: nightly
   include:
-    - php: 5.6
+    - php: 7.3
       env:
         - COMPOSER_FLAGS="--prefer-lowest --prefer-stable"
         - COVERAGE=true
         - PHPUNIT_FLAGS="--coverage-clover=coverage.clover"
 
 before_install:
-  - if [[ ${TRAVIS_PHP_VERSION:0:2} == "5." ]]; then echo "extension = mongo.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
   - if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
   - if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then composer config "platform.ext-mongo" "1.6.16" && composer require alcaeus/mongo-php-adapter; fi
 
