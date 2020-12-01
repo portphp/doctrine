@@ -2,6 +2,7 @@
 
 namespace Port\Doctrine\Tests;
 
+use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\TestCase;
 use Port\Doctrine\DoctrineReader;
 use Doctrine\ORM\EntityManager;
@@ -60,7 +61,7 @@ class DoctrineReaderTest extends TestCase
         $config = Setup::createAnnotationMetadataConfiguration($paths, true);
         $em = EntityManager::create($dbParams, $config);
 
-        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($em);
+        $schemaTool = new SchemaTool($em);
         $schemaTool->createSchema(
             array(
                 $em->getMetadataFactory()->getMetadataFor('Port\Doctrine\Tests\Fixtures\Entity\User')
