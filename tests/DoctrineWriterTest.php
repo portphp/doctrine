@@ -18,15 +18,15 @@ class DoctrineWriterTest extends TestCase
         $em = $this->getEntityManager();
 
         $em->expects($this->once())
-                ->method('persist');
+            ->method('persist');
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
         $item = array(
-            'firstProperty'   => 'some value',
-            'secondProperty'  => 'some other value',
-            'firstAssociation'=> $association
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
+            'firstAssociation' => $association
         );
         $writer->writeItem($item);
     }
@@ -36,15 +36,15 @@ class DoctrineWriterTest extends TestCase
         $em = $this->getMongoDocumentManager();
 
         $em->expects($this->once())
-                ->method('persist');
+            ->method('persist');
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
         $item = array(
-            'firstProperty'   => 'some value',
-            'secondProperty'  => 'some other value',
-            'firstAssociation'=> $association
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
+            'firstAssociation' => $association
         );
         $writer->prepare();
         $writer->writeItem($item);
@@ -61,7 +61,7 @@ class DoctrineWriterTest extends TestCase
     protected function getEntityManager()
     {
         $em = $this->getMockBuilder('Doctrine\ORM\EntityManager')
-            ->setMethods(array('getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getReference'))
+            ->onlyMethods(array('getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getReference'))
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -70,7 +70,7 @@ class DoctrineWriterTest extends TestCase
             ->getMock();
 
         $metadata = $this->getMockBuilder('Doctrine\ORM\Mapping\ClassMetadata')
-            ->setMethods(array('getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue', 'getAssociationMappings'))
+            ->onlyMethods(array('getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue', 'getAssociationMappings'))
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -88,7 +88,7 @@ class DoctrineWriterTest extends TestCase
 
         $metadata->expects($this->any())
             ->method('getAssociationMappings')
-            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => self::TEST_ENTITY))));
+            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation', 'targetEntity' => self::TEST_ENTITY))));
 
         $configuration = $this->getMockBuilder('Doctrine\DBAL\Configuration')
             ->setMethods(array('getConnection'))
@@ -153,7 +153,8 @@ class DoctrineWriterTest extends TestCase
             ->getMock();
 
         $metadata = $this->getMockBuilder(MongoDB\Mapping\ClassMetadata::class)
-            ->setMethods(array('getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue', 'getAssociationMappings'))
+            ->addMethods(['getAssociationMappings'])
+            ->onlyMethods(array('getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue'))
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -171,15 +172,16 @@ class DoctrineWriterTest extends TestCase
 
         $metadata->expects($this->any())
             ->method('getAssociationMappings')
-            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => self::TEST_ENTITY))));
+            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation', 'targetEntity' => self::TEST_ENTITY))));
 
         $configuration = $this->getMockBuilder('Doctrine\DBAL\Configuration')
-            ->setMethods(array('getConnection'))
+            ->addMethods(array('getConnection'))
             ->disableOriginalConstructor()
             ->getMock();
 
         $connection = $this->getMockBuilder('Doctrine\DBAL\Connection')
-            ->setMethods(array('getConfiguration', 'getDatabasePlatform', 'getTruncateTableSQL', 'executeQuery'))
+            ->addMethods(array( 'getTruncateTableSQL'))
+            ->onlyMethods(array('getConfiguration', 'getDatabasePlatform', 'executeQuery'))
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -244,9 +246,9 @@ class DoctrineWriterTest extends TestCase
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
-        $item   = array(
-            'firstProperty'    => 'some value',
-            'secondProperty'   => 'some other value',
+        $item = array(
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
             'firstAssociation' => 'firstAssociationId'
         );
 
@@ -266,9 +268,9 @@ class DoctrineWriterTest extends TestCase
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
-        $item        = array(
-            'firstProperty'    => 'some value',
-            'secondProperty'   => 'some other value',
+        $item = array(
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
             'firstAssociation' => $association,
         );
 
