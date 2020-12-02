@@ -29,8 +29,8 @@
     },
     "require-dev": {
         "ext-sqlite3": "*",
-        "doctrine/mongodb-odm": "^2.1",        
-        "doctrine/orm": "^2.0",        
+        "doctrine/mongodb-odm": "^2.1",
+        "doctrine/orm": "^2.6",
         "doctrine/inflector": "^1.4",
         "phpunit/phpunit": "^9.2.0",
         "phpunit/php-code-coverage": "^9.2.0",

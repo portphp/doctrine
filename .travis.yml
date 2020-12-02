@@ -5,12 +5,13 @@ language: php
 php:
   - 7.3
   - 7.4
-  - nightly
+  # - hhvm  
+  # - nightly
 
 matrix:
   allow_failures:
-    - php: hhvm
-    - php: nightly
+    # - php: hhvm
+    # - php: nightly
   include:
     - php: 7.3
       env:
