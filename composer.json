@@ -25,15 +25,16 @@
     "require": {
         "php": ">=7.3",
         "portphp/portphp": "^2.0.0|dev-master",
-        "friends-of-phpspec/phpspec-code-coverage": "^6.0"
+	"doctrine/orm": "^2.0"
     },
     "require-dev": {
         "ext-sqlite3": "*",
         "doctrine/mongodb-odm": "^2.1",        
-        "doctrine/orm": "^2.7",        
+        "doctrine/orm": "^2.0",        
         "doctrine/inflector": "^1.4",
         "phpunit/phpunit": "^9.2.0",
-        "phpspec/phpspec": "^7.0"
+        "phpspec/phpspec": "^7.0",
+        "friends-of-phpspec/phpspec-code-coverage": "^6.0"
     },
     "autoload": {
         "psr-4": {
