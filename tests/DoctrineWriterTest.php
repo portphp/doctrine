@@ -2,29 +2,39 @@
 
 namespace Port\Doctrine\Tests;
 
+use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\Connection;
+use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\Mapping\ClassMetadata as MongoClassMetadata;
+use Doctrine\ODM\MongoDB\Repository\DocumentRepository;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\ObjectManager;
+use MongoDB\Collection;
 use PHPUnit\Framework\TestCase;
 use Port\Doctrine\DoctrineWriter;
 use Port\Doctrine\Tests\Fixtures\Entity\TestEntity;
 
 class DoctrineWriterTest extends TestCase
 {
-    const TEST_ENTITY = 'Port\Doctrine\Tests\Fixtures\Entity\TestEntity';
+    const TEST_ENTITY = TestEntity::class;
 
     public function testWriteItem()
     {
         $em = $this->getEntityManager();
 
         $em->expects($this->once())
-                ->method('persist');
+            ->method('persist');
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
-        $item = array(
-            'firstProperty'   => 'some value',
-            'secondProperty'  => 'some other value',
-            'firstAssociation'=> $association
-        );
+        $item = [
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
+            'firstAssociation' => $association
+        ];
         $writer->writeItem($item);
     }
 
@@ -33,16 +43,16 @@ class DoctrineWriterTest extends TestCase
         $em = $this->getMongoDocumentManager();
 
         $em->expects($this->once())
-                ->method('persist');
+            ->method('persist');
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
-        $item = array(
-            'firstProperty'   => 'some value',
-            'secondProperty'  => 'some other value',
-            'firstAssociation'=> $association
-        );
+        $item = [
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
+            'firstAssociation' => $association
+        ];
         $writer->prepare();
         $writer->writeItem($item);
     }
@@ -50,24 +60,24 @@ class DoctrineWriterTest extends TestCase
     public function testUnsupportedDatabaseTypeException()
     {
         $this->expectException('Port\Doctrine\Exception\UnsupportedDatabaseTypeException');
-        $em = $this->getMockBuilder('Doctrine\Persistence\ObjectManager')
+        $em = $this->getMockBuilder(ObjectManager::class)
             ->getMock();
         new DoctrineWriter($em, 'Port:TestEntity');
     }
 
     protected function getEntityManager()
     {
-        $em = $this->getMockBuilder('Doctrine\ORM\EntityManager')
-            ->setMethods(array('getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getReference'))
+        $em = $this->getMockBuilder(EntityManager::class)
+            ->setMethods(['getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getReference'])
             ->disableOriginalConstructor()
             ->getMock();
 
-        $repo = $this->getMockBuilder('Doctrine\ORM\EntityRepository')
+        $repo = $this->getMockBuilder(EntityRepository::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $metadata = $this->getMockBuilder('Doctrine\ORM\Mapping\ClassMetadata')
-            ->setMethods(array('getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue', 'getAssociationMappings'))
+        $metadata = $this->getMockBuilder(ClassMetadata::class)
+            ->setMethods(['getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue', 'getAssociationMappings'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -77,23 +87,23 @@ class DoctrineWriterTest extends TestCase
 
         $metadata->expects($this->any())
             ->method('getFieldNames')
-            ->will($this->returnValue(array('firstProperty', 'secondProperty')));
+            ->will($this->returnValue(['firstProperty', 'secondProperty']));
 
         $metadata->expects($this->any())
             ->method('getAssociationNames')
-            ->will($this->returnValue(array('firstAssociation')));
+            ->will($this->returnValue(['firstAssociation']));
 
         $metadata->expects($this->any())
             ->method('getAssociationMappings')
-            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => self::TEST_ENTITY))));
+            ->will($this->returnValue([['fieldName' => 'firstAssociation', 'targetEntity' => self::TEST_ENTITY]]));
 
-        $configuration = $this->getMockBuilder('Doctrine\DBAL\Configuration')
-            ->setMethods(array('getConnection'))
+        $configuration = $this->getMockBuilder(Configuration::class)
+            ->setMethods(['getConnection'])
             ->disableOriginalConstructor()
             ->getMock();
 
-        $connection = $this->getMockBuilder('Doctrine\DBAL\Connection')
-            ->setMethods(array('getConfiguration', 'getDatabasePlatform', 'getTruncateTableSQL', 'executeQuery'))
+        $connection = $this->getMockBuilder(Connection::class)
+            ->setMethods(['getConfiguration', 'getDatabasePlatform', 'getTruncateTableSQL', 'executeQuery'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -128,10 +138,11 @@ class DoctrineWriterTest extends TestCase
         $self = $this;
         $em->expects($this->any())
             ->method('persist')
-            ->will($this->returnCallback(function ($argument) use ($self) {
-                $self->assertNotNull($argument->getFirstAssociation());
-                return true;
-            }));
+            ->will(
+                $this->returnCallback(function ($argument) use ($self) {
+                    $self->assertNotNull($argument->getFirstAssociation());
+                    return true;
+                }));
 
         return $em;
     }
@@ -139,17 +150,17 @@ class DoctrineWriterTest extends TestCase
 
     protected function getMongoDocumentManager()
     {
-        $dm = $this->getMockBuilder('Doctrine\ODM\MongoDB\DocumentManager')
-            ->setMethods(array('getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getDocumentCollection'))
+        $dm = $this->getMockBuilder(DocumentManager::class)
+            ->setMethods(['getRepository', 'getClassMetadata', 'persist', 'flush', 'clear', 'getConnection', 'getDocumentCollection'])
             ->disableOriginalConstructor()
             ->getMock();
 
-        $repo = $this->getMockBuilder('Doctrine\ODM\MongoDB\DocumentRepository')
+        $repo = $this->getMockBuilder(DocumentRepository::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $metadata = $this->getMockBuilder('Doctrine\ODM\MongoDB\Mapping\ClassMetadata')
-            ->setMethods(array('getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue', 'getAssociationMappings'))
+        $metadata = $this->getMockBuilder(MongoClassMetadata::class)
+            ->setMethods(['getName', 'getFieldNames', 'getAssociationNames', 'setFieldValue', 'getAssociationMappings'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -159,23 +170,23 @@ class DoctrineWriterTest extends TestCase
 
         $metadata->expects($this->any())
             ->method('getFieldNames')
-            ->will($this->returnValue(array('firstProperty', 'secondProperty')));
+            ->will($this->returnValue(['firstProperty', 'secondProperty']));
 
         $metadata->expects($this->any())
             ->method('getAssociationNames')
-            ->will($this->returnValue(array('firstAssociation')));
+            ->will($this->returnValue(['firstAssociation']));
 
         $metadata->expects($this->any())
             ->method('getAssociationMappings')
-            ->will($this->returnValue(array(array('fieldName' => 'firstAssociation','targetEntity' => self::TEST_ENTITY))));
+            ->will($this->returnValue([['fieldName' => 'firstAssociation', 'targetEntity' => self::TEST_ENTITY]]));
 
-        $configuration = $this->getMockBuilder('Doctrine\DBAL\Configuration')
-            ->setMethods(array('getConnection'))
+        $configuration = $this->getMockBuilder(Configuration::class)
+            ->setMethods(['getConnection'])
             ->disableOriginalConstructor()
             ->getMock();
 
-        $connection = $this->getMockBuilder('Doctrine\DBAL\Connection')
-            ->setMethods(array('getConfiguration', 'getDatabasePlatform', 'getTruncateTableSQL', 'executeQuery'))
+        $connection = $this->getMockBuilder(Connection::class)
+            ->setMethods(['getConfiguration', 'getDatabasePlatform', 'getTruncateTableSQL', 'executeQuery'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -205,13 +216,13 @@ class DoctrineWriterTest extends TestCase
             ->method('getConnection')
             ->will($this->returnValue($connection));
 
-        $documentCollection = $this->getMockBuilder('\MongoCollection')
+        $documentCollection = $this->getMockBuilder(Collection::class)
             ->disableOriginalConstructor()
             ->getMock();
 
         $documentCollection
             ->expects($this->once())
-            ->method('remove');
+            ->method('deleteMany');
 
         $dm->expects($this->once())
             ->method('getDocumentCollection')
@@ -220,10 +231,11 @@ class DoctrineWriterTest extends TestCase
         $self = $this;
         $dm->expects($this->any())
             ->method('persist')
-            ->will($this->returnCallback(function ($argument) use ($self) {
-                $self->assertNotNull($argument->getFirstAssociation());
-                return true;
-            }));
+            ->will(
+                $this->returnCallback(function ($argument) use ($self) {
+                    $self->assertNotNull($argument->getFirstAssociation());
+                    return true;
+                }));
 
         return $dm;
     }
@@ -240,11 +252,11 @@ class DoctrineWriterTest extends TestCase
 
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
-        $item   = array(
-            'firstProperty'    => 'some value',
-            'secondProperty'   => 'some other value',
+        $item = [
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
             'firstAssociation' => 'firstAssociationId'
-        );
+        ];
 
         $writer->writeItem($item);
     }
@@ -262,11 +274,11 @@ class DoctrineWriterTest extends TestCase
         $writer = new DoctrineWriter($em, 'Port:TestEntity');
 
         $association = new TestEntity();
-        $item        = array(
-            'firstProperty'    => 'some value',
-            'secondProperty'   => 'some other value',
+        $item = [
+            'firstProperty' => 'some value',
+            'secondProperty' => 'some other value',
             'firstAssociation' => $association,
-        );
+        ];
 
         $writer->writeItem($item);
     }

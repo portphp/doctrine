@@ -31,7 +31,7 @@
         "phpunit/phpunit": "^9.0",
         "ext-sqlite3": "*",
         "doctrine/cache": "^1.11",
-        "doctrine/orm": "~2.4",
+        "doctrine/orm": "^2.8",
         "doctrine/mongodb-odm": "^2.0"
     },
     "autoload": {

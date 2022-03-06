@@ -15,7 +15,7 @@ jobs:
           - php-versions: '7.4'
             coverage: pcov
             composer-prefer: '--prefer-lowest --prefer-stable'
-            phpunit-flags: '--coverage-clover=coverage.clover'
+            phpunit-flags: '--coverage-clover coverage.xml'
 
     runs-on: ubuntu-latest
 

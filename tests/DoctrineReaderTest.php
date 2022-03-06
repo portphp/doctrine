@@ -14,7 +14,7 @@ class DoctrineReaderTest extends TestCase
     {
         $fields = $this->getReader()->getFields();
         $this->assertIsArray($fields);
-        $this->assertEquals(array('id', 'username'), $fields);
+        $this->assertEquals(['id', 'username'], $fields);
     }
 
     public function testCount()
@@ -44,27 +44,27 @@ class DoctrineReaderTest extends TestCase
 
         $em->flush();
 
-        return new DoctrineReader($em, 'Port\Doctrine\Tests\Fixtures\Entity\User');
+        return new DoctrineReader($em, User::class);
     }
 
     protected function getEntityManager()
     {
-        $dbParams = array(
+        $dbParams = [
             'driver'   => 'pdo_sqlite',
-        );
+        ];
 
-        $paths = array(
+        $paths = [
             __DIR__.'/../Fixtures/Entity'
-        );
+        ];
 
         $config = Setup::createAnnotationMetadataConfiguration($paths, true);
         $em = EntityManager::create($dbParams, $config);
 
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($em);
         $schemaTool->createSchema(
-            array(
+            [
                 $em->getMetadataFactory()->getMetadataFor(User::class)
-            )
+            ]
         );
 
         return $em;
