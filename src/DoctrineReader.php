@@ -2,7 +2,7 @@
 
 namespace Port\Doctrine;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
