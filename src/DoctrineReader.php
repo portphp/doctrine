@@ -69,7 +69,10 @@ class DoctrineReader implements CountableReader
             ->getFieldNames();
     }
 
-    public function current(): mixed
+    /**
+     * @return mixed
+     */
+    public function current()
     {
         return current($this->iterableResult->current());
     }
@@ -79,7 +82,10 @@ class DoctrineReader implements CountableReader
         $this->iterableResult->next();
     }
 
-    public function key(): mixed
+    /**
+     * @return mixed
+     */
+    public function key()
     {
         return $this->iterableResult->key();
     }
