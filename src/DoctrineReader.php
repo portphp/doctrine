@@ -69,42 +69,27 @@ class DoctrineReader implements CountableReader
             ->getFieldNames();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function current()
+    public function current(): mixed
     {
         return current($this->iterableResult->current());
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function next()
+    public function next(): void
     {
         $this->iterableResult->next();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function key()
+    public function key(): mixed
     {
         return $this->iterableResult->key();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function valid()
+    public function valid(): bool
     {
         return $this->iterableResult->valid();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function rewind()
+    public function rewind(): void
     {
         if (!$this->iterableResult) {
             $query = $this->getQueryBuilder()->select('o')->getQuery();
@@ -115,10 +100,7 @@ class DoctrineReader implements CountableReader
         $this->iterableResult->rewind();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function count()
+    public function count(): int
     {
         $query = $this->getQueryBuilder()->select('count(o)')->getQuery();
 
