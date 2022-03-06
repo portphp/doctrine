@@ -26,7 +26,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
-          extensions: mongodb
           coverage: ${{ matrix.coverage }}
 
       - name: Validate composer.json and composer.lock
