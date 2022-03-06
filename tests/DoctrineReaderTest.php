@@ -2,18 +2,19 @@
 
 namespace Port\Doctrine\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Port\Doctrine\DoctrineReader;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Port\Doctrine\Tests\Fixtures\Entity\User;
 
-class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
+class DoctrineReaderTest extends TestCase
 {
     public function testGetFields()
     {
         $fields = $this->getReader()->getFields();
-        $this->assertInternalType('array', $fields);
-        $this->assertEquals(array('id', 'username'), $fields);
+        $this->assertIsArray($fields);
+        $this->assertEquals(['id', 'username'], $fields);
     }
 
     public function testCount()
@@ -25,7 +26,7 @@ class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
     {
         $i = 1;
         foreach ($this->getReader() as $data) {
-            $this->assertInternalType('array', $data);
+            $this->assertIsArray($data);
             $this->assertEquals('user' . $i, $data['username']);
             $i++;
         }
@@ -43,27 +44,27 @@ class DoctrineReaderTest extends \PHPUnit_Framework_TestCase
 
         $em->flush();
 
-        return new DoctrineReader($em, 'Port\Doctrine\Tests\Fixtures\Entity\User');
+        return new DoctrineReader($em, User::class);
     }
 
     protected function getEntityManager()
     {
-        $dbParams = array(
+        $dbParams = [
             'driver'   => 'pdo_sqlite',
-        );
+        ];
 
-        $paths = array(
+        $paths = [
             __DIR__.'/../Fixtures/Entity'
-        );
+        ];
 
         $config = Setup::createAnnotationMetadataConfiguration($paths, true);
         $em = EntityManager::create($dbParams, $config);
 
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($em);
         $schemaTool->createSchema(
-            array(
-                $em->getMetadataFactory()->getMetadataFor('Port\Doctrine\Tests\Fixtures\Entity\User')
-            )
+            [
+                $em->getMetadataFactory()->getMetadataFor(User::class)
+            ]
         );
 
         return $em;

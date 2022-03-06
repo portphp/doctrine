@@ -2,7 +2,7 @@
 
 namespace Port\Doctrine;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 
 /**
  * Factory that creates DoctrineReaders
