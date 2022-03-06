@@ -60,19 +60,13 @@ class DoctrineReader implements CountableReader
         return clone $this->queryBuilder;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getFields()
+    public function getFields(): array
     {
         return $this->objectManager->getClassMetadata($this->objectName)
             ->getFieldNames();
     }
 
-    /**
-     * @return mixed
-     */
-    public function current()
+    public function current(): array
     {
         return current($this->iterableResult->current());
     }
@@ -82,10 +76,7 @@ class DoctrineReader implements CountableReader
         $this->iterableResult->next();
     }
 
-    /**
-     * @return mixed
-     */
-    public function key()
+    public function key(): int
     {
         return $this->iterableResult->key();
     }

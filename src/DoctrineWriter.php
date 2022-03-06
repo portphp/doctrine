@@ -216,23 +216,15 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
 
     /**
      * Call a setter of the object
-     *
-     * @param object $object
-     * @param mixed  $value
-     * @param string $setter
      */
-    protected function setValue($object, $value, $setter)
+    protected function setValue(object $object, $value, string $setter)
     {
         if (method_exists($object, $setter)) {
             $object->$setter($value);
         }
     }
 
-    /**
-     * @param array  $item
-     * @param object $object
-     */
-    protected function updateObject(array $item, $object)
+    protected function updateObject(array $item, object $object): void
     {
         $fieldNames = array_merge($this->objectMetadata->getFieldNames(), $this->objectMetadata->getAssociationNames());
         foreach ($fieldNames as $fieldName) {
@@ -257,11 +249,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
 
     /**
      * Add the associated objects in case the item have for persist its relation
-     *
-     * @param array  $item
-     * @param object $object
      */
-    protected function loadAssociationObjectsToObject(array $item, $object)
+    protected function loadAssociationObjectsToObject(array $item, object $object): void
     {
         foreach ($this->objectMetadata->getAssociationMappings() as $associationMapping) {
 
@@ -319,12 +308,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
         $config->setSQLLogger($this->originalLogger);
     }
 
-    /**
-     * @param array $item
-     *
-     * @return object
-     */
-    protected function findOrCreateItem(array $item)
+    protected function findOrCreateItem(array $item): object
     {
         $object = null;
         // If the table was not truncated to begin with, find current object
