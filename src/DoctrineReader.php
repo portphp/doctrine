@@ -33,14 +33,19 @@ class DoctrineReader implements CountableReader
     /** @var QueryBuilder */
     protected $queryBuilder;
 
+    /** @var int */
+    private $hydrationMode;
+
     /**
      * @param ObjectManager $objectManager
      * @param string $objectName e.g. YourBundle:YourEntity
+     * @param int $hydrationMode Hydration mode (Query::HYDRATE_ARRAY, Query::HYDRATE_OBJECT)
      */
-    public function __construct(ObjectManager $objectManager, $objectName)
+    public function __construct(ObjectManager $objectManager, $objectName, $hydrationMode = Query::HYDRATE_ARRAY)
     {
         $this->objectManager = $objectManager;
         $this->objectName = $objectName;
+        $this->hydrationMode = $hydrationMode;
     }
 
     public function setQueryBuilder(QueryBuilder $queryBuilder)
@@ -91,7 +96,7 @@ class DoctrineReader implements CountableReader
         if (!$this->iterableResult) {
             $query = $this->getQueryBuilder()->select('o')->getQuery();
 
-            $this->iterableResult = $query->iterate([], Query::HYDRATE_ARRAY);
+            $this->iterableResult = $query->iterate([], $this->hydrationMode);
         }
 
         $this->iterableResult->rewind();
