@@ -155,10 +155,8 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
 
     /**
      * Disable Doctrine logging
-     *
-     * @return $this
      */
-    public function prepare()
+    public function prepare(): void
     {
         $this->disableLogging();
 
@@ -170,7 +168,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     /**
      * Re-enable Doctrine logging
      */
-    public function finish()
+    public function finish(): void
     {
         $this->flush();
         $this->reEnableLogging();
@@ -179,7 +177,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     /**
      * {@inheritdoc}
      */
-    public function writeItem(array $item)
+    public function writeItem(array $item): void
     {
         $object = $this->findOrCreateItem($item);
 
