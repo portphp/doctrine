@@ -57,7 +57,7 @@ class DoctrineReaderTest extends TestCase
             __DIR__.'/../Fixtures/Entity'
         ];
 
-        $config = Setup::createAnnotationMetadataConfiguration($paths, true, null, null, false);
+        $config = Setup::createAnnotationMetadataConfiguration($paths, true);
         $em = EntityManager::create($dbParams, $config);
 
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($em);
