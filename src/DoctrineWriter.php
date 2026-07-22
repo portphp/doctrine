@@ -190,7 +190,7 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     /**
      * Flush and clear the object manager
      */
-    public function flush()
+    public function flush(): void
     {
         $this->objectManager->flush();
         $this->objectManager->clear();
