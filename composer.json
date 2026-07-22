@@ -32,7 +32,8 @@
         "ext-sqlite3": "*",
         "doctrine/cache": "^1.11",
         "doctrine/orm": "^2.8",
-        "doctrine/mongodb-odm": "^2.0"
+        "doctrine/mongodb-odm": "^2.0",
+        "doctrine/annotations": "^1.13 || ^2.0"
     },
     "autoload": {
         "psr-4": {
