@@ -10,6 +10,7 @@ use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
 use Port\Doctrine\Exception\UnsupportedDatabaseTypeException;
+use Port\Doctrine\LookupStrategy\FieldsLookupStrategy;
 use Port\Writer;
 
 /**
@@ -72,25 +73,46 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
     /**
      * Method used for looking up the item
      *
-     * @var array
+     * @var array|callable
      */
     protected $lookupMethod;
+
+    /**
+     * Strategy used to look up existing entities when truncate is disabled.
+     */
+    private LookupStrategy $lookupStrategy;
 
     private Inflector $inflector;
 
     /**
+     * Create a Doctrine writer with a custom object lookup strategy.
+     *
+     * Prefer this when you need QueryBuilder-based or other non-field lookups
+     * (see https://github.com/portphp/doctrine/issues/3).
+     */
+    public static function withLookupStrategy(
+        ObjectManager $objectManager,
+        string $objectName,
+        LookupStrategy $lookupStrategy
+    ): self {
+        return new self($objectManager, $objectName, null, 'findOneBy', $lookupStrategy);
+    }
+
+    /**
      * Constructor
      *
-     * @param ObjectManager $objectManager
-     * @param string        $objectName
-     * @param string|array  $index         Field or fields to find current entities by
-     * @param string        $lookupMethod  Method used for looking up the item
+     * @param ObjectManager         $objectManager
+     * @param string               $objectName
+     * @param string|array|null    $index          Field or fields to find current entities by
+     * @param string               $lookupMethod   Method used for looking up the item
+     * @param LookupStrategy|null  $lookupStrategy Optional custom strategy (overrides $index / $lookupMethod)
      */
     public function __construct(
         ObjectManager $objectManager,
         $objectName,
         $index = null,
-        $lookupMethod = 'findOneBy'
+        $lookupMethod = 'findOneBy',
+        ?LookupStrategy $lookupStrategy = null
     ) {
         $this->ensureSupportedObjectManager($objectManager);
         $this->objectManager = $objectManager;
@@ -116,6 +138,11 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
             );
         }
         $this->lookupMethod = [$this->objectRepository, $lookupMethod];
+        $this->lookupStrategy = $lookupStrategy ?? new FieldsLookupStrategy(
+            $this->objectRepository,
+            $index,
+            $lookupMethod
+        );
         $this->inflector = InflectorFactory::create()->build();
     }
 
@@ -308,27 +335,15 @@ class DoctrineWriter implements Writer, Writer\FlushableWriter
 
     protected function findOrCreateItem(array $item): object
     {
-        $object = null;
-        // If the table was not truncated to begin with, find current object
-        // first
+        // If the table was not truncated to begin with, find current object first
         if (!$this->truncate) {
-            if (!empty($this->lookupFields)) {
-                $lookupConditions = [];
-                foreach ($this->lookupFields as $fieldName) {
-                    $lookupConditions[$fieldName] = $item[$fieldName];
-                }
-
-                $object = call_user_func($this->lookupMethod, $lookupConditions);
-            } else {
-                $object = $this->objectRepository->find(current($item));
+            $object = $this->lookupStrategy->lookup($item);
+            if ($object !== null) {
+                return $object;
             }
         }
 
-        if (!$object) {
-            return $this->getNewInstance();
-        }
-
-        return $object;
+        return $this->getNewInstance();
     }
 
     protected function ensureSupportedObjectManager(ObjectManager $objectManager)
